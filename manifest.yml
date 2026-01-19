@@ -1,0 +1,56 @@
+permissions:
+  external:
+    fetch:
+      backend:
+        - https://api.openai.com
+        - https://eyvut26eftut6kc2n5sk6fxzmy0pgpwp.lambda-url.us-east-2.on.aws
+        - https://tq1x4vc1i1.execute-api.us-east-2.amazonaws.com/default/db-ticket-lambda
+  scopes:
+    - read:jira-work
+    - write:jira-work
+    - storage:app
+modules:
+  sql:
+    - key: main
+      engine: mysql
+  jira:issuePanel:
+    - key: anchorr-issue-panel
+      resource: main
+      resolver:
+        function: resolver
+      render: native
+      title: anchorr
+      icon: https://developer.atlassian.com/platform/forge/images/icons/issue-panel-icon.svg
+  
+  function:
+    - key: resolver
+      handler: resolvers/index.handler
+    - key: issue-trigger-function
+      handler: index.run
+    - key: onInstall
+      handler: index.onInstall
+  
+  trigger:
+    - key: issue-created-trigger
+      function: issue-trigger-function
+      events:
+        - avi:jira:created:issue
+    - key: issue-updated-trigger
+      function: issue-trigger-function
+      events:
+        - avi:jira:updated:issue
+    - key: app-installed-trigger
+      function: onInstall
+      events:
+        - avi:forge:installed
+        - avi:forge:upgraded
+
+resources:
+  - key: main
+    path: src/frontend/index.jsx
+app:
+  runtime:
+    name: nodejs24.x
+    memoryMB: 256
+    architecture: arm64
+  id: ari:cloud:ecosystem::app/47afa506-a739-4045-a2ed-343386342197
