@@ -7,25 +7,15 @@ import { title } from 'process';
 import { Ticket } from './model.js';
 import axios from 'axios';
 
-export const callAnalysisAPI = async (summary, description,key) => {
+export const callAnalysisAPI = async ({ summary, description, key }) => {
     try {
         // Log what we're about to send
-        console.log('=== CALLING LAMBDA ===');
-        console.log('Summary:', summary.summary);
-        console.log('Description:', description);
-        console.log('Summary type:', typeof summary);
-        console.log('Description type:', typeof description);
-        console.log('Summary value:', JSON.stringify(summary));
-        console.log('Description value:', JSON.stringify(description));
-        
         const payload = {
-            summary: summary.summary,
+            summary: summary || "",
             description: description || "",
             jira_issue_key: key || ""
         };
-        
-        console.log('Full payload:', JSON.stringify(payload, null, 2));
-        
+        console.log('Keyyyyy:', key);
         const response = await axios.post(
             'https://eyvut26eftut6kc2n5sk6fxzmy0pgpwp.lambda-url.us-east-2.on.aws',
             payload,
@@ -35,15 +25,8 @@ export const callAnalysisAPI = async (summary, description,key) => {
                 }
             }
         );
-
-        console.log('=== LAMBDA RESPONSE ===');
-        console.log('Lambda response:', response.data);
         return response.data;
     } catch (error) {
-        console.error('=== ERROR ===');
-        console.error('Error response:', error.response?.data);
-        console.error('Error status:', error.response?.status);
-        console.error('Error message:', error.message);
         throw error;
     }
 };
@@ -124,7 +107,6 @@ export async function run(event, context) {
                 label: '',
             });
             const response = await saveTicket(ticket);
-            console.log('Ticket Response:', response);
             if (!apiKey) {
                 console.error('OPENAI_API_KEY is not set in environment');
                 return;
@@ -135,12 +117,12 @@ export async function run(event, context) {
                 issueKey: key,
                 processing: true
             });
+            console.log(`Processing issue ${key} with summary: ${summary} and description: ${description}`);
             const analysisResponse = await callAnalysisAPI({
                 summary,
                 description,
                 key
             });
-            console.log('Analysis received:', analysisResponse);
             const analysis = analysisResponse.analysis;
             // Store the analysis
             await storage.set(`analysis-status`, {
@@ -150,7 +132,7 @@ export async function run(event, context) {
                 issueSummary: summary
             });
         }else {
-            await getDecision(issue.key);
+            const analysis = await getDecision(issue.key);
             await storage.set(`analysis-status`, {
                 ...analysis,
                 timestamp: new Date().toISOString(),
@@ -159,8 +141,6 @@ export async function run(event, context) {
             });
         }
     } catch (err) {
-        console.error('Error handling issue created trigger:', err);
-        console.error('Error stack:', err.stack);
         try {
             await storage.set('anchorr-status', {
                 message: `Error: ${err.message}`,
@@ -168,7 +148,6 @@ export async function run(event, context) {
                 error: true
             });
         } catch (storageErr) {
-            console.error('Failed to store error status:', storageErr);
         }
     }
 }
