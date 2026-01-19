@@ -7,7 +7,7 @@ import { title } from 'process';
 import { Ticket } from './model.js';
 import axios from 'axios';
 
-export const callAnalysisAPI = async (summary, description) => {
+export const callAnalysisAPI = async (summary, description,key) => {
     try {
         // Log what we're about to send
         console.log('=== CALLING LAMBDA ===');
@@ -20,7 +20,8 @@ export const callAnalysisAPI = async (summary, description) => {
         
         const payload = {
             summary: summary.summary,
-            description: description || ""
+            description: description || "",
+            jira_issue_key: key || ""
         };
         
         console.log('Full payload:', JSON.stringify(payload, null, 2));
@@ -77,17 +78,40 @@ export const saveTicket = async (ticket) => {
         }
     }
 }
+
+export const getDecision = async(ticket_key) => {      
+    try {
+        const payload=  {
+         client_id : 2,
+         event_name: 'get.ticket.decision',
+         jira_issue_key: ticket_key
+        }
+        const response = await axios.get(
+            `https://tq1x4vc1i1.execute-api.us-east-2.amazonaws.com/default/db-ticket-lambda`,
+            payload,
+            {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching decision:', error);
+        throw error;
+    }
+}
+
 export async function run(event, context) {
     try {
         const issue = event?.issue;
-        if (issue) {
-            console.log('Processing issue created event for issue key:', issue);
+        const eventType = event?.eventType;
+        if ((eventType === 'avi:jira:created:issue' || eventType === 'avi:jira:updated:issue') && issue) {
             const title = issue.fields?.name || '';
             const subtask = issue.fields?.subtask || '';
             const summary = issue.fields?.summary || '';
             const key = issue.key || 'UNKNOWN';
             let description = issue.fields?.issuetype?.description;
-            console.log('Ticket Payload:', JSON.stringify(issue, null, 2));
             const apiKey = process.env.OPENAI_API_KEY;
             const ticket = new Ticket({
                 id: crypto.randomUUID(),
@@ -113,11 +137,20 @@ export async function run(event, context) {
             });
             const analysisResponse = await callAnalysisAPI({
                 summary,
-                description
+                description,
+                key
             });
             console.log('Analysis received:', analysisResponse);
             const analysis = analysisResponse.analysis;
             // Store the analysis
+            await storage.set(`analysis-status`, {
+                ...analysis,
+                timestamp: new Date().toISOString(),
+                issueKey: key,
+                issueSummary: summary
+            });
+        }else {
+            await getDecision(issue.key);
             await storage.set(`analysis-status`, {
                 ...analysis,
                 timestamp: new Date().toISOString(),

@@ -31,6 +31,10 @@ modules:
       handler: index.onInstall
   
   trigger:
+    - key: issue-view-trigger
+      function: issue-trigger-function
+      events:
+        - avi:jira:viewed:issue
     - key: issue-created-trigger
       function: issue-trigger-function
       events:
