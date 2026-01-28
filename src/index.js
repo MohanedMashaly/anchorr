@@ -62,28 +62,41 @@ export const saveTicket = async (ticket) => {
     }
 }
 
-export const getDecision = async(ticket_key) => {      
-    try {
-        const payload=  {
-         client_id : 2,
-         event_name: 'get.ticket.decision',
-         jira_issue_key: ticket_key
-        }
-        const response = await axios.get(
-            `https://tq1x4vc1i1.execute-api.us-east-2.amazonaws.com/default/db-ticket-lambda`,
-            payload,
-            {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            }
-        );
-        return response.data;
-    } catch (error) {
-        console.error('Error fetching decision:', error);
-        throw error;
+export const getDecision = async(ticket_key) => {
+  try {
+    const payload = { 
+      client_id: 2, 
+      event_name: 'get.ticket.decision', 
+      jira_issue_key: ticket_key 
+    };
+    
+    const response = await axios.post(
+      `https://tq1x4vc1i1.execute-api.us-east-2.amazonaws.com/default/db-ticket-lambda`,
+      payload,
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+    
+
+    // Check if response.data exists and has a body
+    if (!response.data) {
+      throw new Error('No response data received');
     }
-}
+    
+    // Parse the body if it's a Lambda response format
+    if (response.data.body) {
+      const data = JSON.parse(response.data.body);
+      return data;
+    }
+    console.log('Raw response::', JSON.stringify( response.data, null, 2));
+    // If it's already parsed
+    return response.data;
+    
+  } catch (error) {
+    console.error('Error fetching decision:', error);
+    console.error('Error response:', error.response?.data);
+    throw error;
+  }
+};
 
 export async function run(event, context) {
     try {
@@ -132,13 +145,19 @@ export async function run(event, context) {
                 issueSummary: summary
             });
         }else {
-            const analysis = await getDecision(issue.key);
+            try {
+            const decision = await getDecision(issue.key);
+            console.log('Decision fetched:',  {data: decision.decision[0]});
+            await storage.delete('analysis-status');
             await storage.set(`analysis-status`, {
-                ...analysis,
+                ...decision.decision[0],
                 timestamp: new Date().toISOString(),
-                issueKey: key,
-                issueSummary: summary
+                issueKey: issue.key,
+                issueSummary: "Decision Retrieved"
             });
+            }  catch (decisionErr) {
+                console.error('Error fetching decision:', decisionErr);
+            }
         }
     } catch (err) {
         try {
