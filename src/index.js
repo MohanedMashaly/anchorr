@@ -16,8 +16,9 @@ export const callAnalysisAPI = async ({ summary, description, key }) => {
             jira_issue_key: key || ""
         };
         console.log('Keyyyyy:', key);
+        const lamdaUrl = process.env.AWS_LAMBDA_ANALYSIS_URL+"";
         const response = await axios.post(
-            'https://eyvut26eftut6kc2n5sk6fxzmy0pgpwp.lambda-url.us-east-2.on.aws',
+            lamdaUrl,
             payload,
             {
                 headers: {
@@ -43,9 +44,10 @@ export const saveTicket = async (ticket) => {
             label: ticket.label,
             event_name: 'insert.ticket'
         };
+        const db_url =process.env.AWS_LAMBDA_DB_URL+"";
         console.log('Full payload:', JSON.stringify(payload, null, 2));
         const response = await axios.post(
-            'https://tq1x4vc1i1.execute-api.us-east-2.amazonaws.com/default/db-ticket-lambda',
+            db_url,
             payload,
             {
                 headers: {
@@ -69,9 +71,9 @@ export const getDecision = async(ticket_key) => {
       event_name: 'get.ticket.decision', 
       jira_issue_key: ticket_key 
     };
-    
+    const db_url =process.env.AWS_LAMBDA_DB_URL+"";
     const response = await axios.post(
-      `https://tq1x4vc1i1.execute-api.us-east-2.amazonaws.com/default/db-ticket-lambda`,
+      db_url,
       payload,
       { headers: { 'Content-Type': 'application/json' } }
     );
