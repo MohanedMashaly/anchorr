@@ -1,12 +1,23 @@
 export { handler } from './resolvers';
-import { sql, errorCodes } from '@forge/sql';
-import OpenAI from "openai";
-import { storage } from '@forge/api';
+import { errorCodes } from '@forge/sql';
+import api,{ route,storage } from '@forge/api';
 import crypto from 'crypto';
-import { title } from 'process';
 import { Ticket } from './model.js';
 import axios from 'axios';
-
+const fetchIssueDescription = async (issueKey) => {
+    try {
+        const response = await api.asApp().requestJira(
+            route`/rest/api/2/issue/${issueKey}?fields=description`,
+            { headers: { 'Accept': 'application/json' } }
+        );
+        console.log(`Fetched description for ${issueKey}:`, response);
+        const data = await response.json();
+        return data.fields?.description || '';
+    } catch (error) {
+        console.error(`Failed to fetch description for ${issueKey}:`, error);
+        return '';
+    }
+};
 export const callAnalysisAPI = async ({ summary, description, key }) => {
     try {
         // Log what we're about to send
@@ -115,7 +126,8 @@ export async function run(event, context) {
             const subtask = issue.fields?.subtask || '';
             const summary = issue.fields?.summary || '';
             const key = issue.key || 'UNKNOWN';
-            let description = issue.fields?.issuetype?.description;
+            const description = await fetchIssueDescription(key);
+            console.log(`Processing issue ${key} with summary: ${summary} and description: ${description}`);
             const apiKey = process.env.OPENAI_API_KEY;
             const ticket = new Ticket({
                 id: crypto.randomUUID(),
