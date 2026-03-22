@@ -20,7 +20,7 @@ modules:
         function: resolver
       render: native
       title: anchorr
-      icon: https://developer.atlassian.com/platform/forge/images/icons/issue-panel-icon.svg
+      icon: https://anchor-logo.s3.us-east-2.amazonaws.com/anchor-logo.png
   
   function:
     - key: resolver

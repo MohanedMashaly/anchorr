@@ -22,7 +22,8 @@ export const callAnalysisAPI = async ({ summary, description, key }) => {
             payload,
             {
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${process.env.ANALYSIS_API_KEY}`
                 }
             }
         );
@@ -51,7 +52,9 @@ export const saveTicket = async (ticket) => {
             payload,
             {
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                     'Authorization': `Bearer ${process.env.DB_API_KEY}`
+
                 }
             }
         );
@@ -75,7 +78,10 @@ export const getDecision = async(ticket_key) => {
     const response = await axios.post(
       db_url,
       payload,
-      { headers: { 'Content-Type': 'application/json' } }
+      { headers: { 'Content-Type': 'application/json', 
+                    'Authorization': `Bearer ${process.env.DB_API_KEY}`
+
+      } }
     );
     
 
@@ -146,7 +152,7 @@ export async function run(event, context) {
                 issueKey: key,
                 issueSummary: summary
             });
-        }else {
+        }else if (eventType === 'avi:jira:viewed:issue') {
             try {
             const decision = await getDecision(issue.key);
             console.log('Decision fetched:',  {data: decision.decision[0]});
