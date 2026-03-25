@@ -4,6 +4,20 @@ import api,{ route,storage } from '@forge/api';
 import crypto from 'crypto';
 import { Ticket } from './model.js';
 import axios from 'axios';
+
+const getCloudId = (context) => {
+    const contexts = context?.installation?.contexts;
+    if (Array.isArray(contexts)) {
+        for (const ctx of contexts) {
+            if (ctx.cloudId) return ctx.cloudId;
+        }
+    }
+    const installContext = context?.installContext || '';
+    const match = installContext.match(/site\/([a-f0-9-]+)/i);
+    if (match) return match[1];
+    console.warn('Could not determine cloudId from Forge context');
+    return 'unknown';
+};
 const fetchIssueDescription = async (issueKey) => {
     try {
         const response = await api.asApp().requestJira(
@@ -78,10 +92,10 @@ export const saveTicket = async (ticket) => {
     }
 }
 
-export const getDecision = async(ticket_key) => {
+export const getDecision = async(ticket_key, client_id) => {
   try {
     const payload = { 
-      client_id: 2, 
+      client_id: client_id, 
       event_name: 'get.ticket.decision', 
       jira_issue_key: ticket_key 
     };
@@ -121,6 +135,7 @@ export async function run(event, context) {
     try {
         const issue = event?.issue;
         const eventType = event?.eventType;
+        const clientId = getCloudId(context);
         if ((eventType === 'avi:jira:created:issue' || eventType === 'avi:jira:updated:issue') && issue) {
             const title = issue.fields?.name || '';
             const subtask = issue.fields?.subtask || '';
@@ -131,7 +146,7 @@ export async function run(event, context) {
             const apiKey = process.env.OPENAI_API_KEY;
             const ticket = new Ticket({
                 id: crypto.randomUUID(),
-                client_id: 2,
+                client_id: clientId,
                 jira_issue_key: key,
                 title: summary,
                 description: description,
