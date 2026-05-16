@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ForgeReconciler, { ProgressBar, List, ListItem, Badge, Heading, Spinner, Text, Box } from '@forge/react';
-import { invoke } from '@forge/bridge';
+import { invoke, view } from '@forge/bridge';
 
 const App = () => {
   const [data, setData] = useState(undefined);
@@ -9,7 +9,14 @@ const App = () => {
   useEffect(() => {
     let mounted = true;
 
-    invoke('getText').then((res) => {
+    view.getContext().then((ctx) => {
+      const issueKey = ctx?.extension?.issue?.key;
+      if (!issueKey) {
+        if (mounted) setLoading(false);
+        return;
+      }
+      return invoke('getText', { issueKey });
+    }).then((res) => {
       if (mounted) {
         setData(res);
         setLoading(false);

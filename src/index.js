@@ -6,16 +6,22 @@ import { Ticket } from './model.js';
 import axios from 'axios';
 
 const getCloudId = (context) => {
+    const installContext = context?.installContext || '';
+    const uuidMatch = installContext.match(
+        /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i
+    );
+    if (uuidMatch) return uuidMatch[1];
     const contexts = context?.installation?.contexts;
     if (Array.isArray(contexts)) {
         for (const ctx of contexts) {
-            if (ctx.cloudId) return ctx.cloudId;
+            const id = String(ctx.cloudId || '');
+            // Only accept it if it looks like a full UUID
+            if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+                return id;
+            }
         }
     }
-    const installContext = context?.installContext || '';
-    const match = installContext.match(/site\/([a-f0-9-]+)/i);
-    if (match) return match[1];
-    console.warn('Could not determine cloudId from Forge context');
+    console.warn('Could not determine cloudId from Forge context:', JSON.stringify(context));
     return 'unknown';
 };
 const fetchIssueDescription = async (issueKey) => {
@@ -32,15 +38,16 @@ const fetchIssueDescription = async (issueKey) => {
         return '';
     }
 };
-export const callAnalysisAPI = async ({ summary, description, key }) => {
+export const callAnalysisAPI = async ({ summary, description, key,clientId }) => {
     try {
         // Log what we're about to send
         const payload = {
             summary: summary || "",
             description: description || "",
-            jira_issue_key: key || ""
+            jira_issue_key: key || "",
+            client_id: clientId,
+            event_name: 'get.ticket.analysis'
         };
-        console.log('Keyyyyy:', key);
         const lamdaUrl = process.env.AWS_LAMBDA_ANALYSIS_URL+"";
         const response = await axios.post(
             lamdaUrl,
@@ -70,7 +77,7 @@ export const saveTicket = async (ticket) => {
             label: ticket.label,
             event_name: 'insert.ticket'
         };
-        const db_url =process.env.AWS_LAMBDA_DB_URL+"";
+        const db_url =process.env.AWS_LAMBDA_ANALYSIS_URL+"";
         console.log('Full payload:', JSON.stringify(payload, null, 2));
         const response = await axios.post(
             db_url,
@@ -78,7 +85,7 @@ export const saveTicket = async (ticket) => {
             {
                 headers: {
                     'Content-Type': 'application/json',
-                     'Authorization': `Bearer ${process.env.DB_API_KEY}`
+                     'Authorization': `Bearer ${process.env.ANALYSIS_API_KEY}`
 
                 }
             }
@@ -99,12 +106,12 @@ export const getDecision = async(ticket_key, client_id) => {
       event_name: 'get.ticket.decision', 
       jira_issue_key: ticket_key 
     };
-    const db_url =process.env.AWS_LAMBDA_DB_URL+"";
+    const db_url =process.env.AWS_LAMBDA_ANALYSIS_URL+"";
     const response = await axios.post(
       db_url,
       payload,
       { headers: { 'Content-Type': 'application/json', 
-                    'Authorization': `Bearer ${process.env.DB_API_KEY}`
+                    'Authorization': `Bearer ${process.env.ANALYSIS_API_KEY}`
 
       } }
     );
@@ -169,11 +176,11 @@ export async function run(event, context) {
             const analysisResponse = await callAnalysisAPI({
                 summary,
                 description,
-                key
+                key,
+                clientId
             });
             const analysis = analysisResponse.analysis;
-            // Store the analysis
-            await storage.set(`analysis-status`, {
+            await storage.set(`analysis-${key}`, {
                 ...analysis,
                 timestamp: new Date().toISOString(),
                 issueKey: key,
@@ -181,10 +188,10 @@ export async function run(event, context) {
             });
         }else if (eventType === 'avi:jira:viewed:issue') {
             try {
-            const decision = await getDecision(issue.key);
+            console.log(`clientId: ${clientId}. Fetching decision...`);
+            const decision = await getDecision(issue.key, clientId);
             console.log('Decision fetched:',  {data: decision.decision[0]});
-            await storage.delete('analysis-status');
-            await storage.set(`analysis-status`, {
+            await storage.set(`analysis-${issue.key}`, {
                 ...decision.decision[0],
                 timestamp: new Date().toISOString(),
                 issueKey: issue.key,

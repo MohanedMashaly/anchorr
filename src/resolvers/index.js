@@ -4,7 +4,11 @@ import { storage } from '@forge/api';
 const resolver = new Resolver();
 
 resolver.define('getText', async (req) => {
-  const status = await storage.get('analysis-status');
+  const issueKey = req.payload?.issueKey;
+  if (!issueKey) {
+    return null;
+  }
+  const status = await storage.get(`analysis-${issueKey}`);
   return status;
 });
 
