@@ -10,7 +10,7 @@ export const CREATE_USERS_TABLE = `CREATE TABLE Client (
 )`;
 
 
-export const CREATE_TICKET_TABLE = `CCREATE TABLE IF NOT EXISTS Ticket (
+export const CREATE_TICKET_TABLE = `CREATE TABLE IF NOT EXISTS Ticket (
     id  SERIAL  PRIMARY KEY,
     client_id INT NOT NULL,
     jira_issue_key TEXT NOT NULL,

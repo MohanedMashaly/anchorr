@@ -1,40 +1,83 @@
 import React, { useEffect, useState } from 'react';
-import ForgeReconciler, { ProgressBar, List, ListItem, Badge, Heading, Spinner, Text, Box } from '@forge/react';
+import ForgeReconciler, {
+  ProgressBar,
+  List,
+  ListItem,
+  Badge,
+  Heading,
+  Spinner,
+  Text,
+  Box,
+} from '@forge/react';
 import { invoke, view } from '@forge/bridge';
 
+const getDecisionAppearance = (percentage) =>
+  percentage >= 80 ? 'success' : 'default';
+
+const getBadgeAppearance = (percentage) =>
+  percentage >= 80 ? 'added' : 'important';
+
 const App = () => {
-  const [data, setData] = useState(undefined);
-  const [loading, setLoading] = useState(true);
+  const [state, setState] = useState({
+    loading: true,
+    data: null,
+    error: null,
+  });
 
   useEffect(() => {
-    let mounted = true;
+    let isMounted = true;
 
-    view.getContext().then((ctx) => {
-      const issueKey = ctx?.extension?.issue?.key;
-      if (!issueKey) {
-        if (mounted) setLoading(false);
-        return;
+    const fetchAnalysis = async () => {
+      try {
+        const ctx = await view.getContext();
+        const issueKey = ctx?.extension?.issue?.key;
+
+        if (!issueKey) {
+          throw new Error('Issue key was not found.');
+        }
+
+        const result = await invoke('getText', { issueKey });
+
+        if (isMounted) {
+          setState({
+            loading: false,
+            data: result ?? null,
+            error: null,
+          });
+        }
+      } catch (error) {
+        if (isMounted) {
+          setState({
+            loading: false,
+            data: null,
+            error,
+          });
+        }
       }
-      return invoke('getText', { issueKey });
-    }).then((res) => {
-      if (mounted) {
-        setData(res);
-        setLoading(false);
-      }
-    }).catch(() => {
-      if (mounted) setLoading(false);
-    });
+    };
+
+    fetchAnalysis();
 
     return () => {
-      mounted = false;
+      isMounted = false;
     };
   }, []);
+
+  const { loading, data, error } = state;
 
   if (loading) {
     return (
       <Box padding="space.200">
         <Spinner size="large" label="Fetching analysis..." />
         <Text>Please wait while we fetch the analysis...</Text>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box padding="space.200">
+        <Text>Unable to load analysis data.</Text>
       </Box>
     );
   }
@@ -47,31 +90,38 @@ const App = () => {
     );
   }
 
+  const decisionPercentage = Number(data.decision_percentage) || 0;
+  const issuesFound = Array.isArray(data.issues_found) ? data.issues_found : [];
+  const recommendations = Array.isArray(data.recommendations)
+    ? data.recommendations
+    : [];
+
   return (
-    <>
+    <Box padding="space.200">
       <ProgressBar
         ariaLabel="Decision percentage"
-        value={(data?.decision_percentage / 100) ?? 0}
-        appearance={data?.decision_percentage > 80 ? "success" : "default"}
+        value={decisionPercentage / 100}
+        appearance={getDecisionAppearance(decisionPercentage)}
       />
-      <Badge appearance={data?.decision_percentage >= 80 ? "added" : "important"}>
-        {data?.decision_percentage}
+
+      <Badge appearance={getBadgeAppearance(decisionPercentage)}>
+        {decisionPercentage}%
       </Badge>
 
       <Heading size="small">Issues Found:</Heading>
       <List type="ordered">
-        {data?.issues_found.map((item, index) => (
-          <ListItem key={index}>{item}</ListItem>
+        {issuesFound.map((item, index) => (
+          <ListItem key={`${item}-${index}`}>{item}</ListItem>
         ))}
       </List>
 
       <Heading size="small">Recommendations:</Heading>
       <List type="ordered">
-        {data?.recommendations.map((item, index) => (
-          <ListItem key={index}>{item}</ListItem>
+        {recommendations.map((item, index) => (
+          <ListItem key={`${item}-${index}`}>{item}</ListItem>
         ))}
       </List>
-    </>
+    </Box>
   );
 };
 

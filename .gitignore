@@ -25,6 +25,9 @@ dist/
 
 *.env 
 
+.env 
+
+
 # JetBrains IDE
 .idea/
 
