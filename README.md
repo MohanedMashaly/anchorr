@@ -18,7 +18,7 @@ Anchor’s archtiecture is intentionally straightforward. The App is divided int
       The core backend is built using Supabase and Edge Functions, providing a simple, scalable, and serverless backend architecture.
       
       It contains:
-      - **Anchor RAG Model** : Responsible for the classification and identification of Jira tickets and issues using semantic analysis.
+      - **text embedding model** : Responsible for the classification and identification of Jira tickets and issues using semantic analysis and core          part of the RAG system in anchor.
       
       - **AI Conflict & Recommendation Model**:  Responsible for comparing the tickets after they have been filtered by the RAG model to identify
         conflicts and generate recommendations between them.
@@ -28,12 +28,14 @@ This keeps the backend lightweight while allowing AI analysis to run efficiently
 You will find Anchor core backend in this [repo](https://github.com/MohanedMashaly/acnhor-edge-function).
 ## How AI was used in Anchor : 
 
+Anchor is an AI-driven solution, so AI is at the core of almost every part of the product.
 
-### Notes
-- Use the `forge deploy` command when you want to persist code changes.
-- Use the `forge install` command when you want to install the app on a new site.
-- Once the app is installed on a site, the site picks up the new app changes you deploy without needing to rerun the install command.
+For issue classification and semantic retrieval, we use text-embedding-3-small, an embedding model developed by OpenAI. Every Jira issue is embedded and indexed, allowing Anchor to retrieve only the most semantically relevant tickets instead of comparing against the entire project.
 
+For recommendation generation and conflict detection, we use gpt-5.6-luna. After the RAG system retrieves the most relevant issues, the model compares them against the current ticket to identify requirement conflicts, duplicated work, and possible product drift.
+
+We Also used  on Codex throughout development. One of the biggest improvements was using Codex to migrate our entire infrastructure from AWS to Supabase with zero downtime allowing us to transition seamlessly without disrupting development and it always feels good to go from couple of hundered dollars/month to zero dollar bills. Beyond infrastructure, Codex also accelerated implementation, helped optimize prompts and workflows, and reduced our AI costs significantly while maintaining the same level of recommendation accuracy.
+ 
 ## Support
 
 See [Get help](https://developer.atlassian.com/platform/forge/get-help/) for how to get help and provide feedback.
