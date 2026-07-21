@@ -22,7 +22,10 @@ Anchor’s archtiecture is intentionally straightforward. The App is divided int
         conflicts and generate recommendations between them.
 
 This keeps the backend lightweight while allowing AI analysis to run efficiently without managing dedicated infrastructure.
-  
+
+## How AI was used in Anchor : 
+
+
 ### Notes
 - Use the `forge deploy` command when you want to persist code changes.
 - Use the `forge install` command when you want to install the app on a new site.
