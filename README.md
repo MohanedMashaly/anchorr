@@ -1,33 +1,10 @@
-# Forge Hello World
-
-This project contains a Forge app written in Javascript that displays `Hello World!` in a Jira issue panel. 
-
-See [developer.atlassian.com/platform/forge/](https://developer.atlassian.com/platform/forge) for documentation and tutorials explaining Forge.
-
-## Requirements
-
-See [Set up Forge](https://developer.atlassian.com/platform/forge/set-up-forge/) for instructions to get set up.
-
-## Quick start
-
-- Modify your app frontend by editing the `src/frontend/index.jsx` file.
-
-- Modify your app backend by editing the `src/resolvers/index.js` file to define resolver functions. See [Forge resolvers](https://developer.atlassian.com/platform/forge/runtime-reference/custom-ui-resolver/) for documentation on resolver functions.
-
-- Build and deploy your app by running:
-```
-forge deploy
-```
-
-- Install your app in an Atlassian site by running:
-```
-forge install
-```
-
-- Develop your app by running `forge tunnel` to proxy invocations locally:
-```
-forge tunnel
-```
+# How to Use Anchor
+Go to the Atlassian Marketplace and search for Anchor, or visit the Marketplace listing directly.
+Click Install and complete the setup for your Jira project.
+Open Jira Boards and create a new board (or use an existing one) to try Anchor.
+Create a new Jira issue and fill in the ticket details, such as the title, description, and any other relevant information.
+Open the issue and click the Anchor button (highlighted in the screenshot) to analyze the ticket.
+Review Anchor's recommendations, related historical tickets, and the Conflict Score to identify potential contradictions before moving forward.
 
 ### Notes
 - Use the `forge deploy` command when you want to persist code changes.
