@@ -7,7 +7,9 @@
 7. Review Anchor's recommendations, related historical tickets, and the Conflict Score to identify potential contradictions before moving forward.
 
 ## Archtiecture 
-Anchor’s archtiecture is intentionally straightforward. The App is divided into two main modules/components 
+Anchor’s archtiecture is intentionally straightforward. The App is divided into two main modules/components.
+<img width="1310" height="1201" alt="image" src="https://github.com/user-attachments/assets/7d69e670-661f-4ce9-9c87-4d71f359d63b" />
+
   1. **Anchor Plugin** :
      The component responsible for Anchor's interaction with Atlassian and Jira. It is developed using **Atlassian Forge**, **JavaScript**, and
      **Forge UI**, providing a seamless experience directly inside Jira.
@@ -28,6 +30,7 @@ You will find Anchor core backend in this [repo](https://github.com/MohanedMasha
 ## How AI was used in Anchor : 
 
 Anchor is an AI-driven solution, so AI is at the core of almost every part of the product.
+
 
 For issue classification and semantic retrieval, we use **text-embedding-3-small**, an embedding model developed by OpenAI. Every Jira issue is embedded and indexed, allowing Anchor to retrieve only the most semantically relevant tickets instead of comparing against the entire project.
 
