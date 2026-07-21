@@ -8,7 +8,8 @@
 
 ## Archtiecture 
 Anchor’s archtiecture is intentionally straightforward. The App is divided into two main modules/components.
-<img width="1310" height="1201" alt="image" src="https://github.com/user-attachments/assets/7d69e670-661f-4ce9-9c87-4d71f359d63b" />
+<img width="600" height="600" alt="image" src="https://github.com/user-attachments/assets/7c2e8207-0de3-4c33-9b6e-3380f8493e80" />
+
 
   1. **Anchor Plugin** :
      The component responsible for Anchor's interaction with Atlassian and Jira. It is developed using **Atlassian Forge**, **JavaScript**, and
