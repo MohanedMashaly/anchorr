@@ -30,7 +30,6 @@ const fetchIssueDescription = async (issueKey) => {
             route`/rest/api/2/issue/${issueKey}?fields=description`,
             { headers: { 'Accept': 'application/json' } }
         );
-        console.log(`Fetched description for ${issueKey}:`, response);
         const data = await response.json();
         return data.fields?.description || '';
     } catch (error) {
@@ -55,7 +54,7 @@ export const callAnalysisAPI = async ({ summary, description, key,clientId }) =>
             {
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${process.env.ANALYSIS_API_KEY}`
+                    'Authorization': `Bearer ${process.env.SUPABASE_API_KEY}`
                 }
             }
         );
@@ -72,20 +71,19 @@ export const saveTicket = async (ticket) => {
             jira_issue_key: ticket.jira_issue_key,
             title: ticket.title,
             description: ticket.description,
-            is_subtask: ticket.is_subtask,
+            is_subtask: ticket.is_subtask ?? false,
             priority: ticket.priority,
             label: ticket.label,
             event_name: 'insert.ticket'
         };
         const db_url =process.env.AWS_LAMBDA_ANALYSIS_URL+"";
-        console.log('Full payload:', JSON.stringify(payload, null, 2));
         const response = await axios.post(
             db_url,
             payload,
             {
                 headers: {
                     'Content-Type': 'application/json',
-                     'Authorization': `Bearer ${process.env.ANALYSIS_API_KEY}`
+                     'Authorization': `Bearer ${process.env.SUPABASE_API_KEY}`
 
                 }
             }
@@ -111,7 +109,7 @@ export const getDecision = async(ticket_key, client_id) => {
       db_url,
       payload,
       { headers: { 'Content-Type': 'application/json', 
-                    'Authorization': `Bearer ${process.env.ANALYSIS_API_KEY}`
+                    'Authorization': `Bearer ${process.env.SUPABASE_API_KEY}`
 
       } }
     );
@@ -127,7 +125,6 @@ export const getDecision = async(ticket_key, client_id) => {
       const data = JSON.parse(response.data.body);
       return data;
     }
-    console.log('Raw response::', JSON.stringify( response.data, null, 2));
     // If it's already parsed
     return response.data;
     
@@ -145,11 +142,10 @@ export async function run(event, context) {
         const clientId = getCloudId(context);
         if ((eventType === 'avi:jira:created:issue' || eventType === 'avi:jira:updated:issue') && issue) {
             const title = issue.fields?.name || '';
-            const subtask = issue.fields?.subtask || '';
+            const subtask = (issue.fields?.subtask) ?? false;
             const summary = issue.fields?.summary || '';
             const key = issue.key || 'UNKNOWN';
             const description = await fetchIssueDescription(key);
-            console.log(`Processing issue ${key} with summary: ${summary} and description: ${description}`);
             const apiKey = process.env.OPENAI_API_KEY;
             const ticket = new Ticket({
                 id: crypto.randomUUID(),
@@ -172,7 +168,6 @@ export async function run(event, context) {
                 issueKey: key,
                 processing: true
             });
-            console.log(`Processing issue ${key} with summary: ${summary} and description: ${description}`);
             const analysisResponse = await callAnalysisAPI({
                 summary,
                 description,
@@ -188,11 +183,9 @@ export async function run(event, context) {
             });
         }else if (eventType === 'avi:jira:viewed:issue') {
             try {
-            console.log(`clientId: ${clientId}. Fetching decision...`);
             const decision = await getDecision(issue.key, clientId);
-            console.log('Decision fetched:',  {data: decision.decision[0]});
             await storage.set(`analysis-${issue.key}`, {
-                ...decision.decision[0],
+                ...decision.decision,
                 timestamp: new Date().toISOString(),
                 issueKey: issue.key,
                 issueSummary: "Decision Retrieved"

@@ -3,8 +3,7 @@ permissions:
     fetch:
       backend:
         - https://api.openai.com
-        - https://eyvut26eftut6kc2n5sk6fxzmy0pgpwp.lambda-url.us-east-2.on.aws
-        - https://tq1x4vc1i1.execute-api.us-east-2.amazonaws.com/default/db-ticket-lambda
+        - https://dkjhqututldfxhyxwwum.supabase.co/functions/v1/anchor-ticket-handler
   scopes:
     - read:jira-work
     - write:jira-work
