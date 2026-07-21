@@ -1,5 +1,5 @@
 # How to Use Anchor
-1. Go to the Atlassian Marketplace and search for Anchor, or visit the [Marketplace listing (https://marketplace.atlassian.com/apps/3628381141/anchorr) directly.
+1. Go to the Atlassian Marketplace and search for Anchor, or visit the [Marketplace listing](https://marketplace.atlassian.com/apps/3628381141/anchorr) directly.
 2. Click Install and complete the setup for your Jira project.
 3. Open Jira Boards and create a new board (or use an existing one) to try Anchor.
 4. Create a new Jira issue and fill in the ticket details, such as the title, description, and any other relevant information.
