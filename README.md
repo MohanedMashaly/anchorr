@@ -12,6 +12,8 @@ Anchor’s archtiecture is intentionally straightforward. The App is divided int
      The component responsible for Anchor's interaction with Atlassian and Jira. It is developed using Atlassian Forge, JavaScript, and Forge UI,
      providing a seamless experience directly inside Jira.
 
+    This repo contains the code for this component(Atlassian Plugin).
+
   3. **Anchor Core Backend**
       The core backend is built using Supabase and Edge Functions, providing a simple, scalable, and serverless backend architecture.
       
@@ -23,6 +25,7 @@ Anchor’s archtiecture is intentionally straightforward. The App is divided int
 
 This keeps the backend lightweight while allowing AI analysis to run efficiently without managing dedicated infrastructure.
 
+You will find Anchor core backend in this [repo](https://github.com/MohanedMashaly/acnhor-edge-function).
 ## How AI was used in Anchor : 
 
 
