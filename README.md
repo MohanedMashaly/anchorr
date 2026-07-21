@@ -13,12 +13,12 @@ Anchor’s archtiecture is intentionally straightforward. The App is divided int
 
   2. **Anchor Core Backend**
   
-  The core backend is built using Supabase and Edge Functions, providing a simple, scalable, and serverless backend architecture.
-  
-  It contains:
-  
-  Anchor RAG Model – Responsible for the classification and identification of Jira tickets and issues using semantic analysis.
-  AI Conflict & Recommendation Model – Responsible for comparing the tickets after they have been filtered by the RAG model to identify conflicts and generate recommendations between them.
+    The core backend is built using Supabase and Edge Functions, providing a simple, scalable, and serverless backend architecture.
+    
+    It contains:
+   . Anchor RAG Model – Responsible for the classification and identification of Jira tickets and issues using semantic analysis.
+    
+    . AI Conflict & Recommendation Model – Responsible for comparing the tickets after they have been filtered by the RAG model to identify conflicts       and generate recommendations between them.
   
   This keeps the backend lightweight while allowing AI analysis to run efficiently without managing dedicated infrastructure.
   
